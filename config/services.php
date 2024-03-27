@@ -14,6 +14,10 @@ return [
     |
     */
 
+    'languagetool' => [
+        'url' => env('LANGUAGETOOL_BASE_URL'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
