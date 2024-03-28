@@ -105,14 +105,12 @@ export default function Typing() {
     };
 
     return (
-        <>
-            <div className="w-screen h-screen bg-gradient-to-b from-black to-purple-950  flex items-center justify-center">
-                <TextArea
-                    typedText={typedText}
-                    autoFocus={true}
-                    checkText={checkText}
-                ></TextArea>
-            </div>
-        </>
+        <div className="w-screen h-screen bg-gradient-to-b from-black to-purple-950  flex items-center justify-center">
+            <TextArea
+                typedText={typedText}
+                autoFocus={true}
+                checkText={checkText}
+            ></TextArea>
+        </div>
     );
 }
