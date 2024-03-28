@@ -1,64 +1,117 @@
-import { useState } from "react";
-export default function Typing() {
-    const [words, setWords] = useState([]);
-    const [checkedWords, setCheckedWords] = useState([]);
-    const [typedText, setTypedText] = useState("");
+import { useState, useEffect, useReducer } from "react";
+import TextArea from "../Components/TextArea";
+const initialState = { displayWords: [] };
 
-    const checkText = (event) => {
-        const input = event.target.value;
-        setTypedText(input);
+const checkWordAPI = async (wordObject) => {
+    // console.log(wordObject);
+    const data = new URLSearchParams();
+    data.append("word", wordObject.word);
 
-        if (!input.match(/^[a-zA-Z\s]/)) {
-            return;
-        }
+    const response = await fetch("/word/validate", {
+        method: "POST",
+        body: data,
+    });
 
-        const rawWords = input.trim().split(" ");
-        setWords(rawWords);
-        let lastWord = {
-            word: rawWords[rawWords.length - 1],
-            checked: false,
-        };
+    let updated = await updateWord(wordObject, await response.json());
+    return updated;
+};
 
-        const enteredChar = input.slice(-1);
-        if (enteredChar === " ") {
-            checkWord(lastWord.word).then((data) => {
-                lastWord.checked = true;
-                lastWord.status = data;
-                setCheckedWords([...checkedWords, lastWord]);
-                if (data.results.replacement_found) {
-                    const fixedTest = input.replace(
-                        lastWord.word,
-                        data.results.word,
-                    );
-                    setTypedText(fixedTest);
+const updateWord = (wordObject, data) => {
+    if (data.results) {
+        wordObject.correct = data.results.exact;
+        wordObject.status = data;
+        wordObject.display = data.results.word;
+    }
+    return wordObject;
+};
+
+function updateTypedText(wordObject, typedText, setTypedText, index) {
+    let tempTypedText = typedText;
+    tempTypedText[index] = wordObject.display;
+    setTypedText(tempTypedText);
+}
+
+function reducer(state, action) {
+    const payload = action.payload;
+    let tempWords = state.displayWords;
+
+    switch (action.type) {
+        case "setWord":
+            // We know of a word in this spot already
+            if (tempWords[payload.index]) {
+                // The word is the same as the one we know about so we don't need to recheck it
+                if (tempWords[payload.index].word === payload.wordObject.word) {
+                    return state;
+                } else {
+                    // The word is different so we need to recheck it
+                    if (payload.autoCorrect) {
+                        Promise.resolve(checkWordAPI(payload.wordObject)).then(
+                            (checkedWord) => {
+                                // Update the known words
+                                tempWords[payload.index] = checkedWord;
+
+                                // Update the text inside the text area
+                                updateTypedText(
+                                    checkedWord,
+                                    payload.typedText,
+                                    payload.setTypedText,
+                                    payload.wordObject.typedTextIndex,
+                                );
+                            },
+                        );
+                    }
                 }
+            } else {
+                tempWords[payload.index] = payload.wordObject;
+            }
+
+            return { ...state, displayWords: tempWords };
+        default:
+            return state;
+    }
+}
+
+export default function Typing() {
+    const [typedText, setTypedText] = useState([]);
+    const [state, dispatch] = useReducer(reducer, initialState);
+
+    useEffect(() => {
+        const autoCorrect = typedText[typedText.length - 1] == "";
+        for (const [index, word] of typedText.entries()) {
+            let wordObject = {
+                word,
+                typedTextIndex: index,
+                correct: false,
+                display: word,
+            };
+
+            dispatch({
+                type: "setWord",
+                payload: {
+                    index,
+                    wordObject,
+                    typedText,
+                    setTypedText: (prev) => setTypedText([...prev]),
+                    autoCorrect,
+                },
             });
         }
-    };
+    }, [typedText]);
 
-    const checkWord = async (word) => {
-        const data = new URLSearchParams();
-        data.append("word", word);
-        const response = await fetch("/word/validate", {
-            method: "POST",
-            body: data,
-        });
-
-        return response.json();
+    const checkText = (e) => {
+        const input = e.target.value;
+        const typedWords = input.split(/[\s\r\n]+/);
+        setTypedText(typedWords);
     };
 
     return (
         <>
-            <div className="w-screen h-screen bg-slate-400 flex items-center justify-center">
-                <textarea
-                    value={typedText}
-                    autoCorrect="on"
-                    name="test"
-                    rows="20"
-                    cols="100"
+            <div className="w-screen h-screen bg-gradient-to-b from-black to-purple-950  flex items-center justify-center">
+                <TextArea
+                    typedText={typedText}
                     autoFocus={true}
-                    onChange={(e) => checkText(e)}
-                ></textarea>
+                    checkText={checkText}
+                ></TextArea>
             </div>
         </>
     );
