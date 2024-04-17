@@ -31,3 +31,9 @@ to update the `LANGUAGETOOL_BASE_URL` environment variable.
 If you are interested in the API calls to LanguageTool, they can be found at
 `/app/Http/Controllers/WordCheckController.php` The code is most definitely
 pretty but it works (most of the time).
+
+## Contributing
+
+All contributions are welcome and I will do my best to incorporate any
+submissions promptly. That said, this package will _NOT_ be actively maintained
+or updated so if you want to help, please open an issue or PR.
