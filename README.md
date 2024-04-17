@@ -5,6 +5,17 @@ semblance of autocorrect. It is dependent on a working copy of [Silvio's
 LanguageTool](https://github.com/silvio/docker-languagetool) as it uses that
 container for the actual spell checking.
 
+## Production-ready?
+
+Absolutely not. This was a PoC that I created to see if this could even be
+done since it appears that only Safari actually implements the `autocorrect`
+property on HTML TextArea elements.
+
+Maybe one day, other browsers will implement it too.
+
+Source:
+https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea#autocorrect
+
 ## Interesting stuff
 
 The interesting code can be found in `resources/js/Components/TextArea.jsx` and
